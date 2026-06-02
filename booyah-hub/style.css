@@ -1,0 +1,91 @@
+/* style.css - Clean Production Structural Stylesheet */
+body {
+    background-color: #0d0e12;
+    color: #ffffff;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    padding-bottom: 5rem;
+}
+
+@media (min-width: 768px) {
+    body {
+        padding-bottom: 0;
+    }
+}
+
+.gaming-gradient {
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #b45309 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.card-bg {
+    background-color: #161922;
+    backdrop-filter: blur(10px);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: #0d0e12;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 10px;
+    border: 1px solid #161922;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #ea580c;
+}
+
+.active-nav {
+    color: #f97316 !important;
+    font-weight: 800;
+    text-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
+}
+
+.avatar-option {
+    transition: all 0.2s ease-in-out;
+}
+
+.avatar-option:hover {
+    transform: scale(1.05);
+}
+
+.avatar-option.active-avatar {
+    border-color: #f97316 !important;
+    transform: scale(1.15);
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
+}
+
+#nav-notification-badge {
+    box-shadow: 0 0 8px #ef4444;
+}
+
+#notification-history-list div {
+    transition: background-color 0.15s ease;
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.25s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+}

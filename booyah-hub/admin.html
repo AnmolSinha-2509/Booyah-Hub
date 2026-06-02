@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booyah HUB - Security & Admin Master Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#0d0e12] text-white antialiased">
+
+    <div id="admin-auth-wall" class="fixed inset-0 bg-[#0d0e12] flex flex-col items-center justify-center z-[100] p-4">
+        <div class="bg-[#161922] p-8 rounded-2xl max-w-md w-full border border-gray-800 shadow-2xl text-center space-y-5">
+            <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center text-2xl mx-auto border border-red-500/20">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-wider text-red-500 uppercase">Secure Master Link</h1>
+                <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Esports Database Command Node</p>
+            </div>
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Administrative Email Node</label>
+                    <input id="admin-mobile" type="email" placeholder="admin@booyahhub.com" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-red-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Secret Access Cipher Key</label>
+                    <input id="admin-pin" type="password" placeholder="••••••••" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-red-500 font-mono">
+                </div>
+            </div>
+            <button onclick="verifyTerminalCredentials()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                Authorize Core Terminal
+            </button>
+        </div>
+    </div>
+
+    <div id="admin-dashboard-shell" class="min-h-screen max-w-md mx-auto bg-[#0d0e12] border-x border-gray-900 p-4 space-y-6 hidden">
+        
+        <header class="flex items-center justify-between border-b border-gray-900 pb-4">
+            <div>
+                <h2 class="text-base font-black uppercase text-red-500 tracking-wider">Master Hub Central</h2>
+                <p id="operator-title-log" class="text-[9px] font-mono text-gray-500 uppercase mt-0.5">SESSION_STATUS: CONNECTING...</p>
+            </div>
+            <button onclick="terminateAdminSession()" class="bg-gray-900 border border-gray-800 text-gray-400 hover:text-white p-2 rounded-xl text-xs transition-all">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </header>
+
+        <section class="bg-[#161922] border border-gray-800 p-4 rounded-2xl space-y-4">
+            <h3 class="text-xs font-black uppercase text-white tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-red-500"></i> Deploy New Scrim Arena
+            </h3>
+            <form id="create-tournament-pipeline-form" class="space-y-3">
+                <input id="t-title" type="text" placeholder="Tournament Title (e.g., Alpha Cup T3)" required class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500">
+                <input id="t-banner" type="url" placeholder="Banner Image Link URL (Optional)" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500">
+                <div class="grid grid-cols-3 gap-2">
+                    <input id="t-prize" type="number" placeholder="Prize (Coins)" required min="0" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500">
+                    <input id="t-fee" type="number" placeholder="Fee (Coins)" required min="0" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500">
+                    <input id="t-slots" type="number" placeholder="Slots Max" required min="2" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500">
+                </div>
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                    Inject Tournament Stream Node
+                </button>
+            </form>
+        </section>
+
+        <section class="space-y-3">
+            <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Live Active Arenas Monitoring</h3>
+            <div id="admin-active-tournaments-feed" class="space-y-2">
+                <p class="text-xs text-gray-600 font-mono text-center py-4">Synchronizing with Firebase Cluster...</p>
+            </div>
+        </section>
+
+        <section class="bg-[#161922] border border-gray-800 p-4 rounded-2xl space-y-4">
+            <h3 class="text-xs font-black uppercase text-white tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-vault text-amber-500"></i> Global Ledger Balance Override
+            </h3>
+            <form id="panel-wallet-override-form" class="space-y-3">
+                <input id="p-w-uid" type="text" placeholder="Target Operator Security Hash (UID)" required class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-mono">
+                <input id="p-w-coins" type="number" placeholder="Set Absolute New Coin Balance" required min="0" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                    Force Override Balance Ledger
+                </button>
+            </form>
+        </section>
+
+    </div>
+
+    <div id="edit-tournament-modal" class="fixed inset-0 bg-[#0d0e12]/80 backdrop-blur-sm z-[200] items-center justify-center p-4 hidden">
+        <div class="bg-[#161922] border border-gray-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <div>
+                <h3 class="text-sm font-black uppercase text-white tracking-wide">Modify Arena Settings</h3>
+                <p class="text-[9px] font-mono text-gray-500 uppercase">Altering Active Network Pipeline</p>
+            </div>
+            <input id="edit-t-id" type="hidden">
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Arena Title Header</label>
+                    <input id="edit-t-title" type="text" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Banner Image URL Source</label>
+                    <input id="edit-t-banner" type="url" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Prize</label>
+                        <input id="edit-t-prize" type="number" min="0" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Entry Fee</label>
+                        <input id="edit-t-fee" type="number" min="0" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Slots</label>
+                        <input id="edit-t-slots" type="number" min="2" class="w-full bg-[#0d0e12] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="saveTournamentEdits()" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-xl font-bold uppercase tracking-wider text-xs text-white">Save Changes</button>
+                <button onclick="closeEditModal()" class="bg-gray-800 hover:bg-gray-700 py-2 px-4 rounded-xl font-bold uppercase tracking-wider text-xs text-gray-300">Abort</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+
+</body>
+</html>
