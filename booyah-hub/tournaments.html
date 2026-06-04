@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booyah HUB - Esports Tournaments</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tournaments-container { padding: 20px; font-family: 'Rajdhani', sans-serif; }
+        .vault-status-bar { background: #141721; border: 1px solid rgba(0,255,204,0.1); padding: 12px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .vault-status-bar span { font-size: 14px; color: #8c91a2; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+        .vault-status-bar strong { color: #00ffcc; font-size: 18px; }
+        .matches-grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding-bottom: 90px; }
+        @media(min-width: 768px) { .matches-grid { grid-template-columns: repeat(2, 1fr); } }
+        .premium-t-card { background: #141721; border: 1px solid rgba(255,255,255,0.03); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+        .premium-t-card:hover { border-color: rgba(0,255,204,0.2); }
+        .banner-frame { width: 100%; height: 140px; background-size: cover; background-position: center; position: relative; }
+        .game-pill { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); border: 1px solid #00ffcc; color: #00ffcc; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+        .card-t-body { padding: 15px; flex-grow: 1; }
+        .card-meta-row { display: flex; justify-content: space-between; margin-top: 15px; background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px; }
+        .meta-box { text-align: center; flex: 1; }
+        .meta-box span { font-size: 10px; color: #8c91a2; display: block; margin-bottom: 2px; }
+        .meta-box strong { font-size: 14px; color: #fff; }
+        .card-t-footer { padding: 15px; border-top: 1px solid rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .slot-progress-container { flex-grow: 1; }
+        .slot-bar-outer { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .slot-bar-inner { height: 100%; background: #00ffcc; border-radius: 3px; width: 0%; }
+        .btn-deploy { background: #00ffcc; color: #000; border: none; padding: 10px 20px; font-family: 'Rajdhani'; font-weight: 700; font-size: 14px; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-deploy:hover { background: #00b3ff; }
+        .btn-deploy:disabled { background: #242936 !important; color: #52596d !important; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="tournaments-container">
+        <div class="vault-status-bar">
+            <span><i class="fas fa-gem"></i> Vault Diamonds</span>
+            <strong id="bar-diamonds">💎 0</strong>
+        </div>
+
+        <h3 class="section-title" style="margin-bottom: 20px;">DEPLOYMENT MAPS</h3>
+        <div class="matches-grid" id="global-matches-grid">
+            <span style="color:#8c91a2; font-family:'Roboto'; font-size:14px;">Scanning tactical sectors...</span>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="tournaments.html" class="nav-item active"><i class="fas fa-trophy"></i><span>Matches</span></a>
+        <a href="wallet.html" class="nav-item"><i class="fas fa-wallet"></i><span>Wallet</span></a>
+        <a href="index.html" class="nav-item home-highlight"><div class="home-circle"><i class="fas fa-gamepad"></i></div></a>
+        <a href="community.html" class="nav-item"><i class="fas fa-comments"></i><span>Lounge</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-gear"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { collection, doc, onSnapshot, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        let cachedDiamonds = 0;
+        let userUniqueUid = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userUniqueUid = user.uid;
+                syncVaultBalance();
+                streamTournamentsGrid();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        function syncVaultBalance() {
+            onSnapshot(doc(db, "wallets", userUniqueUid), (snapshot) => {
+                if (snapshot.exists()) {
+                    cachedDiamonds = snapshot.data().diamonds || 0;
+                    document.getElementById('bar-diamonds').innerText = `💎 ${cachedDiamonds}`;
+                }
+            });
+        }
+
+        function streamTournamentsGrid() {
+            onSnapshot(collection(db, "tournaments"), (snapshot) => {
+                const grid = document.getElementById('global-matches-grid');
+                grid.innerHTML = "";
+                
+                let count = 0;
+                snapshot.forEach(matchDoc => {
+                    const t = matchDoc.data();
+                    const playersArray = t.players || [];
+                    const slotsRegistered = playersArray.length;
+                    const maxSlots = t.slots || 48;
+                    const percentage = Math.min(100, (slotsRegistered / maxSlots) * 100);
+                    
+                    const userRegistered = playersArray.includes(userUniqueUid);
+                    const isFull = slotsRegistered >= maxSlots;
+                    
+                    let actionButtonText = "LOCK SLOT";
+                    let actionDisabledAttribute = "";
+                    if (userRegistered) { actionButtonText = "LOCKED"; actionDisabledAttribute = "disabled"; }
+                    else if (isFull) { actionButtonText = "FILLED"; actionDisabledAttribute = "disabled"; }
+
+                    grid.innerHTML += `
+                        <div class="premium-t-card">
+                            <div class="banner-frame" style="background-image: url('${t.banner || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=600'}')">
+                                <span class="game-pill">LIVE ARENA</span>
+                            </div>
+                            <div class="card-t-body">
+                                <h4 style="font-size: 19px; color: #fff; font-weight: bold; text-transform: uppercase;">${t.title || 'Squad Tournament'}</h4>
+                                <div class="card-meta-row">
+                                    <div class="meta-box"><span>PRIZE POOL</span><strong>💎 ${t.prize || 0}</strong></div>
+                                    <div class="meta-box" style="border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05);"><span>ENTRY FEE</span><strong>💎 ${t.entryFee || 0}</strong></div>
+                                    <div class="meta-box"><span>SLOTS LEFT</span><strong style="color:#00ffcc;">${maxSlots - slotsRegistered}</strong></div>
+                                </div>
+                            </div>
+                            <div class="card-t-footer">
+                                <div class="slot-progress-container">
+                                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#8c91a2;"><span>DEPLOYED</span><span>${slotsRegistered}/${maxSlots}</span></div>
+                                    <div class="slot-bar-outer"><div class="slot-bar-inner" style="width: ${percentage}%;"></div></div>
+                                </div>
+                                <button class="btn-deploy" ${actionDisabledAttribute} onclick="triggerDeploymentSequence('${matchDoc.id}', ${t.entryFee || 0})">${actionButtonText}</button>
+                            </div>
+                        </div>
+                    `;
+                    count++;
+                });
+
+                if (count === 0) {
+                    grid.innerHTML = `<span style="color:#8c91a2; font-family:'Roboto'; font-size:14px;"><i class="fas fa-folder-open"></i> No tactical skirmishes listed currently.</span>`;
+                }
+            });
+        }
+
+        window.triggerDeploymentSequence = async function(tournamentId, cost) {
+            if (cachedDiamonds < cost) {
+                alert("❌ INSUFFICIENT FUNDS:\nYour diamond matrix is low. Top up at Vault Balance.");
+                return;
+            }
+
+            if (!confirm(`Confirm deployment entry for 💎 ${cost}?`)) return;
+
+            try {
+                const matchDocRef = doc(db, "tournaments", tournamentId);
+                const latestMatchSnap = await getDoc(matchDocRef);
+
+                if (latestMatchSnap.exists()) {
+                    const currentPlayersList = latestMatchSnap.data().players || [];
+                    const maxAllowedSlots = latestMatchSnap.data().slots || 48;
+                    
+                    if (currentPlayersList.includes(userUniqueUid)) {
+                        alert("❌ DOUBLE INJECTION PREVENTED:\nYou have already locked a slot inside this map array.");
+                        return;
+                    }
+                    if (currentPlayersList.length >= maxAllowedSlots) {
+                        alert("❌ TIMELINE EXPIRED:\nSlots filled just moments before submission. Transaction halted safely.");
+                        return;
+                    }
+
+                    const updatedWealthBalance = cachedDiamonds - cost;
+                    await updateDoc(doc(db, "wallets", userUniqueUid), { diamonds: updatedWealthBalance });
+
+                    await updateDoc(matchDocRef, {
+                        players: arrayUnion(userUniqueUid)
+                    });
+
+                    alert("🎉 MISSION LOCKED:\nYour deployment sequence is fully registered. Be ready at the scheduled timeline!");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("❌ MAINBOARD TRANSMISSION FAILURE:\nOperation aborted due to network node drops.");
+            }
+        }
+    </script>
+</body>
+</html>

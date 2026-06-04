@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Roboto:wght@400;500&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #0b0d12;
+    color: #ffffff;
+    font-family: 'Roboto', sans-serif;
+    padding-bottom: 85px; /* Bottom nav bypass padding */
+}
+
+/* Auth Pages Design */
+.auth-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-wrapper {
+    background: #141721;
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.auth-logo, .logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: #fff;
+    letter-spacing: 1.5px;
+}
+.auth-logo span, .logo span { color: #00ffcc; }
+
+.auth-subtitle {
+    color: #8c91a2;
+    font-size: 14px;
+    margin-top: 5px;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+/* Inputs design */
+.input-group {
+    background: #1c202e;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+    transition: all 0.2s;
+}
+.input-group i { color: #8c91a2; width: 25px; }
+.input-group input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    outline: none;
+    width: 100%;
+    font-size: 15px;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(90deg, #00ffcc, #00b3ff);
+    color: #000;
+    border: none;
+    padding: 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: 0.2s;
+}
+.btn-primary:hover { opacity: 0.9; box-shadow: 0 0 15px rgba(0,255,204,0.4); }
+
+/* Main Header */
+.main-header {
+    background: #141721;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* Global Bottom Navigation System */
+.bottom-nav {
+    background: #141721;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 70px;
+    z-index: 999;
+}
+.nav-item {
+    color: #8c91a2;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 11px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    gap: 4px;
+    transition: 0.2s;
+}
+.nav-item i { font-size: 20px; }
+.nav-item.active, .nav-item:hover { color: #00ffcc; }
+
+/* Mid-Action Game Circle Button */
+.home-highlight { position: relative; top: -15px; }
+.home-circle {
+    background: linear-gradient(135deg, #00ffcc, #00b3ff);
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(0,255,204,0.3);
+}
+.home-circle i { font-size: 24px; }
+
+/* Cards components */
+.section-container { padding: 20px; }
+.section-title { font-family: 'Rajdhani', sans-serif; font-size: 22px; margin-bottom: 15px; text-transform: uppercase; border-left: 3px solid #00ffcc; padding-left: 10px;}
+.tournament-card { background: #141721; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); padding: 15px; margin-bottom: 15px; }
+.card-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px; }
+.game-tag { background: rgba(0,255,204,0.1); color: #00ffcc; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+.slots-left { color: #ffb700; }
+.prize-pool-box { margin-top: 12px; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+.prize-pool-box strong { color: #00ffcc; font-size: 18px; font-family: 'Rajdhani'; }
+.btn-join { background: #00ffcc; color: #000; font-family: 'Rajdhani'; font-weight: bold; padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; }
+.card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }

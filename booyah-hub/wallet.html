@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booyah HUB - Diamonds Vault</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .wallet-container { padding: 20px; font-family: 'Rajdhani', sans-serif; }
+        .balance-card { background: linear-gradient(135deg, #141721 0%, #0b0d12 100%); border: 1px solid rgba(0,255,204,0.2); border-radius: 16px; padding: 25px; text-align: center; position: relative; overflow: hidden; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,255,204,0.05); }
+        .balance-label { font-size: 14px; color: #8c91a2; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .balance-amount { font-size: 42px; font-weight: 800; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.1); margin-bottom: 5px; }
+        .currency-footer { font-size: 12px; color: #00ffcc; font-weight: 600; letter-spacing: 0.5px; }
+        .grid-operations { display: grid; grid-template-columns: 1fr; gap: 20px; padding-bottom: 90px; }
+        @media(min-width: 768px) { .grid-operations { grid-template-columns: repeat(2, 1fr); } }
+        .op-box { background: #141721; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; }
+        .op-title { font-size: 16px; font-weight: bold; color: #00ffcc; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px; }
+        .field-group { margin-bottom: 15px; }
+        .field-group label { display: block; font-size: 11px; color: #8c91a2; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; }
+        .inp-vault { width: 100%; background: #0b0d12; border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px; color: #fff; font-family: 'Roboto'; font-size: 14px; }
+        .inp-vault:focus { outline: none; border-color: #00ffcc; }
+        .btn-action { background: #00ffcc; color: #000; font-family: 'Rajdhani'; font-weight: 700; border: none; padding: 12px; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; width: 100%; font-size: 14px; transition: 0.2s; }
+        .btn-action:hover { background: #00b3ff; }
+    </style>
+</head>
+<body>
+
+    <div class="wallet-container">
+        <div class="balance-card">
+            <div class="balance-label">VAULT ACCOUNT BALANCE</div>
+            <div class="balance-amount" id="vault-diamonds-view">💎 0</div>
+            <div class="currency-footer">SECURE ESCROW CRYPTO MATRIX</div>
+        </div>
+
+        <div class="grid-operations">
+            <div class="op-box">
+                <div class="op-title"><i class="fas fa-plus-circle"></i> Load Wealth Matrix</div>
+                <form id="deposit-verify-form">
+                    <div class="field-group"><label>DIAMOND QUANTITY PACKET</label><input type="number" id="dep-amount" min="10" placeholder="Minimum 10 Diamonds" class="inp-vault" required></div>
+                    <div class="field-group"><label>TRANSACTION VERIFICATION UTR / TRANSACTION ID</label><input type="text" id="dep-utr" placeholder="12 Digit Numeric Code" class="inp-vault" required autocomplete="off"></div>
+                    <button type="submit" class="btn-action">Transmit Verification File</button>
+                </form>
+            </div>
+
+            <div class="op-box">
+                <div class="op-title"><i class="fas fa-arrow-circle-down"></i> Extraction Pipeline</div>
+                <form id="withdraw-request-form">
+                    <div class="field-group"><label>EXTRACTION AMOUNT (DIAMONDS)</label><input type="number" id="wit-amount" min="50" placeholder="Minimum 50 Diamonds" class="inp-vault" required></div>
+                    <div class="field-group"><label>TARGET UPI ADDRESS REFERENCE</label><input type="text" id="wit-upi" placeholder="username@bank" class="inp-vault" required autocomplete="off"></div>
+                    <button type="submit" class="btn-action" style="background: transparent; border: 1px solid #ff3333; color: #ff3333;">Request Liquidation</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="tournaments.html" class="nav-item"><i class="fas fa-trophy"></i><span>Matches</span></a>
+        <a href="wallet.html" class="nav-item active"><i class="fas fa-wallet"></i><span>Wallet</span></a>
+        <a href="index.html" class="nav-item home-highlight"><div class="home-circle"><i class="fas fa-gamepad"></i></div></a>
+        <a href="community.html" class="nav-item"><i class="fas fa-comments"></i><span>Lounge</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-gear"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { doc, onSnapshot, updateDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        let currentDiamondsBalance = 0;
+        let currentUserUid = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserUid = user.uid;
+                onSnapshot(doc(db, "wallets", user.uid), (snapshot) => {
+                    if (snapshot.exists()) {
+                        currentDiamondsBalance = snapshot.data().diamonds || 0;
+                        document.getElementById('vault-diamonds-view').innerText = `💎 ${currentDiamondsBalance}`;
+                    }
+                });
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        document.getElementById('deposit-verify-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amtInp = document.getElementById('dep-amount');
+            const utrInp = document.getElementById('dep-utr');
+
+            await addDoc(collection(db, "vault_requests"), {
+                uid: currentUserUid,
+                type: "deposit",
+                amount: parseInt(amtInp.value),
+                utrOrUpi: utrInp.value.trim(),
+                status: "pending",
+                timestamp: new Date().getTime()
+            });
+
+            amtInp.value = ""; utrInp.value = "";
+            alert("🔒 PACKET LOGGED:\nVerification file transmitted. Diamonds will load once transaction is verified manually.");
+        });
+
+        document.getElementById('withdraw-request-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amtInp = document.getElementById('wit-amount');
+            const upiInp = document.getElementById('wit-upi');
+            const amt = parseInt(amtInp.value);
+
+            if (amt > currentDiamondsBalance) {
+                alert("❌ VAULT OVERFLOW:\nInsufficient diamonds in balance matrix to trigger request.");
+                return;
+            }
+
+            const holdingBalance = currentDiamondsBalance - amt;
+            await updateDoc(doc(db, "wallets", currentUserUid), { diamonds: holdingBalance });
+
+            await addDoc(collection(db, "vault_requests"), {
+                uid: currentUserUid,
+                type: "withdrawal",
+                amount: amt,
+                utrOrUpi: upiInp.value.trim(),
+                status: "pending",
+                timestamp: new Date().getTime()
+            });
+
+            amtInp.value = ""; upiInp.value = "";
+            alert("📉 WITHDRAWAL FILED:\nRequested diamonds are deducted and kept in secure escrow review queue.");
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booyah HUB - Community Lounge & Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .community-container { padding: 20px; font-family: 'Rajdhani', sans-serif; }
+        .sub-panel { background: #141721; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        .panel-title { font-size: 18px; color: #00ffcc; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+        .user-card { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; }
+        .user-info-side { display: flex; align-items: center; gap: 12px; }
+        .u-avatar-circle { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #8c91a2; display: flex; align-items: center; justify-content: center; background: #0b0d12; color: #8c91a2; font-size: 16px; }
+        .u-avatar-circle.online-ring { border-color: #00ffcc; color: #00ffcc; }
+        .btn-comms { background: rgba(0,255,204,0.1); border: 1px solid #00ffcc; color: #00ffcc; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Rajdhani'; font-weight: bold; font-size: 12px; transition: 0.2s; text-transform: uppercase; }
+        .btn-comms:hover { background: #00ffcc; color: #000; }
+        .chat-drawer { position: fixed; bottom: -100%; left: 0; width: 100%; height: 85vh; background: #0d0f17; border-top: 2px solid #00ffcc; border-radius: 20px 20px 0 0; z-index: 99; transition: bottom 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); display: flex; flex-direction: column; }
+        .chat-drawer.open { bottom: 80px; }
+        .chat-header { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .chat-logs { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scrollbar-width: none; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-family: 'Roboto'; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+        .msg.sent { background: #00ffcc; color: #000; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg.received { background: #141721; color: #fff; border: 1px solid rgba(255,255,255,0.05); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-footer-form { padding: 15px; border-top: 1px solid rgba(255,255,255,0.04); background: #141721; display: flex; gap: 10px; }
+        .chat-input { flex-grow: 1; background: #0b0d12; border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 8px; color: #fff; font-family: 'Roboto'; font-size: 14px; }
+        .chat-input:focus { outline: none; border-color: #00ffcc; }
+    </style>
+</head>
+<body>
+
+    <div class="community-container">
+        <div class="sub-panel">
+            <div class="panel-title"><i class="fas fa-street-view"></i> Active Grid Fighters</div>
+            <div id="fighters-matrix-box"><span style="color:#8c91a2; font-family:'Roboto'; font-size:14px;">Mapping transceiver grid nodes...</span></div>
+        </div>
+    </div>
+
+    <div class="chat-drawer" id="chat-engine-drawer">
+        <div class="chat-header">
+            <div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-comments" style="color:#00ffcc;"></i><span id="chat-target-codename" style="font-family:'Rajdhani'; font-size:18px; font-weight:bold; color:#fff;">Secure Link</span></div>
+            <button onclick="closeChatWindow()" style="background:transparent; border:none; color:#ff3333; font-size:18px; cursor:pointer;"><i class="fas fa-times-circle"></i></button>
+        </div>
+        <div class="chat-logs" id="chat-msg-logs"></div>
+        <form class="chat-footer-form" id="chat-send-form">
+            <input type="text" id="chat-input-field" placeholder="Transmit telemetry text data..." class="chat-input" required autocomplete="off">
+            <button type="submit" class="btn-comms" style="padding:0 20px;">Send</button>
+        </form>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="tournaments.html" class="nav-item"><i class="fas fa-trophy"></i><span>Matches</span></a>
+        <a href="wallet.html" class="nav-item"><i class="fas fa-wallet"></i><span>Wallet</span></a>
+        <a href="index.html" class="nav-item home-highlight"><div class="home-circle"><i class="fas fa-gamepad"></i></div></a>
+        <a href="community.html" class="nav-item active"><i class="fas fa-comments"></i><span>Lounge</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-gear"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { collection, addDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        let currentUserId = null;
+        let activeChatTargetId = null;
+        let unsubscribeChat = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                streamFightersGrid();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        function streamFightersGrid() {
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                const box = document.getElementById('fighters-matrix-box');
+                box.innerHTML = "";
+                
+                let nodesCount = 0;
+                snapshot.forEach(doc => {
+                    if (doc.id !== currentUserId) {
+                        const u = doc.data();
+                        const onlineState = u.isOnline === true;
+                        const ringClass = onlineState ? 'online-ring' : '';
+                        const statusLabel = onlineState ? '<span style="color:#00ffcc; font-size:10px; font-weight:bold; display:block;">ONLINE</span>' : '<span style="color:#ff3333; font-size:10px; font-weight:bold; display:block;">OFFLINE</span>';
+
+                        box.innerHTML += `
+                            <div class="user-card">
+                                <div class="user-info-side">
+                                    <div class="u-avatar-circle ${ringClass}"><i class="fas ${u.avatar || 'fa-user-secret'}"></i></div>
+                                    <div>
+                                        <strong style="color:#fff; font-size:16px; display:block;">${u.username || 'Anonymous Warrior'}</strong>
+                                        <span style="color:#8c91a2; font-size:12px; font-family:'Roboto';">${u.bio || 'Tactical operator node.'}</span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    ${statusLabel}
+                                    <button class="btn-comms" style="margin-top:5px;" onclick="initiateSecureChat('${doc.id}', '${u.username || 'Warrior'}')">COMMS</button>
+                                </div>
+                            </div>
+                        `;
+                        nodesCount++;
+                    }
+                });
+
+                if (nodesCount === 0) { box.innerHTML = `<span style="color:#8c91a2; font-family:'Roboto'; font-size:14px;">No other operational grid nodes tracked.</span>`; }
+            });
+        }
+
+        window.initiateSecureChat = function(targetId, targetName) {
+            activeChatTargetId = targetId;
+            document.getElementById('chat-target-codename').innerText = `SECURE LINK: ${targetName.toUpperCase()}`;
+            document.getElementById('chat-engine-drawer').classList.add('open');
+            
+            if (unsubscribeChat) unsubscribeChat();
+
+            const roomStringId = currentUserId < targetId ? `${currentUserId}_${targetId}` : `${targetId}_${currentUserId}`;
+            const chatQuery = query(collection(db, "chats"), where("roomId", "==", roomStringId), orderBy("timestamp", "asc"));
+
+            unsubscribeChat = onSnapshot(chatQuery, (snap) => {
+                const logsBox = document.getElementById('chat-msg-logs');
+                logsBox.innerHTML = "";
+                
+                snap.forEach(messageDoc => {
+                    const data = messageDoc.data();
+                    const classification = data.senderId === currentUserId ? 'sent' : 'received';
+                    logsBox.innerHTML += `<div class="msg ${classification}">${data.text}</div>`;
+                });
+                logsBox.scrollTop = logsBox.scrollHeight;
+            });
+        };
+
+        document.getElementById('chat-send-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputField = document.getElementById('chat-input-field');
+            const textMessage = inputField.value.trim();
+            if (!textMessage || !activeChatTargetId) return;
+
+            const roomStringId = currentUserId < activeChatTargetId ? `${currentUserId}_${activeChatTargetId}` : `${activeChatTargetId}_${currentUserId}`;
+            
+            await addDoc(collection(db, "chats"), {
+                roomId: roomStringId,
+                senderId: currentUserId,
+                text: textMessage,
+                timestamp: new Date().getTime()
+            });
+
+            inputField.value = "";
+        });
+
+        window.closeChatWindow = function() {
+            document.getElementById('chat-engine-drawer').classList.remove('open');
+            if (unsubscribeChat) unsubscribeChat();
+        };
+    </script>
+</body>
+</html>

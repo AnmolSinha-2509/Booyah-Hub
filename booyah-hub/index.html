@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booyah HUB - Esports Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .squad-horizontal-tray { display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px; margin-top: 10px; scrollbar-width: none; }
+        .squad-horizontal-tray::-webkit-scrollbar { display: none; }
+        .squad-member-node { display: flex; flex-direction: column; align-items: center; min-width: 65px; text-align: center; cursor: pointer; }
+        .node-avatar-wrapper { width: 46px; height: 46px; border-radius: 50%; border: 2px solid #8c91a2; display: flex; align-items: center; justify-content: center; background: #141721; position: relative; font-size: 18px; color: #8c91a2; }
+        .node-avatar-wrapper.active-border { border-color: #00ffcc; color: #00ffcc; }
+        .node-indicator { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #0b0d12; position: absolute; bottom: 0; right: 0; }
+        .node-online { background: #00ffcc; box-shadow: 0 0 8px #00ffcc; }
+        .node-offline { background: #ff3333; }
+        .squad-member-node span { font-size: 11px; margin-top: 5px; font-family: 'Rajdhani'; font-weight: 600; max-width: 65px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+    </style>
+</head>
+<body>
+    <header class="main-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+        <div class="logo">BOOYAH<span>HUB</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span id="header-username" style="color: #00ffcc; font-family: 'Rajdhani'; font-weight: bold;">Loading Base...</span>
+            <a href="profile.html" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #00ffcc; display: flex; align-items: center; justify-content: center; background: #141721;">
+                <i id="header-avatar" class="fas fa-user-secret" style="color: #00ffcc;"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="section-container">
+        <div class="sub-panel" style="background:#141721; border:1px solid rgba(255,255,255,0.05); padding:15px; border-radius:12px; margin-bottom:20px;">
+            <div class="panel-title" style="font-family:'Rajdhani'; font-size:16px; color:#00ffcc; font-weight:bold; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:5px;"><i class="fas fa-users-cog"></i> Tactical Squad Monitor</div>
+            <div class="squad-horizontal-tray" id="homepage-squad-tray">
+                <span style="color:#8c91a2; font-size:12px; font-family:'Roboto'">Connecting database pipeline...</span>
+            </div>
+        </div>
+
+        <h3 class="section-title">Active Arena Matches</h3>
+        <div class="tournament-card">
+            <div class="card-header"><span class="game-tag">FREE FIRE</span><span class="slots-left">Slots Active</span></div>
+            <div class="card-body">
+                <h4 style="font-family:'Rajdhani'; font-size:18px;">Bermuda Rush Hour [Solo]</h4>
+                <div class="prize-pool-box"><span>PRIZE POOL</span><strong>₹5,000</strong></div>
+            </div>
+            <div class="card-footer"><button class="btn-join" onclick="window.location.href='tournaments.html'">Register</button></div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="tournaments.html" class="nav-item"><i class="fas fa-trophy"></i><span>Matches</span></a>
+        <a href="wallet.html" class="nav-item"><i class="fas fa-wallet"></i><span>Wallet</span></a>
+        <a href="index.html" class="nav-item home-highlight active"><div class="home-circle"><i class="fas fa-gamepad"></i></div></a>
+        <a href="community.html" class="nav-item"><i class="fas fa-comments"></i><span>Lounge</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-gear"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                if (snap.exists()) {
+                    document.getElementById('header-username').innerText = snap.data().username || "Player";
+                    if(snap.data().avatar) document.getElementById('header-avatar').className = `fas ${snap.data().avatar}`;
+                }
+                initializeSquadNetwork(user.uid);
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        function initializeSquadNetwork(currentUserId) {
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                let allUsersMap = {};
+                let friendsList = [];
+
+                snapshot.forEach(doc => {
+                    allUsersMap[doc.id] = doc.data();
+                    if(doc.id !== currentUserId) {
+                        friendsList.push(doc.id);
+                    }
+                });
+                renderSquadTray(friendsList, allUsersMap);
+            });
+        }
+
+        function renderSquadTray(friends, allUsersMap) {
+            const tray = document.getElementById('homepage-squad-tray');
+            tray.innerHTML = "";
+            let integratedNodeCount = 0;
+
+            friends.forEach(fUid => {
+                const friendData = allUsersMap[fUid];
+                if(friendData) {
+                    const isOnline = friendData.isOnline === true;
+                    const nodeDotStatus = isOnline ? 'node-online' : 'node-offline';
+                    const borderStatus = isOnline ? 'active-border' : '';
+                    const avatar = friendData.avatar || "fa-user-secret";
+
+                    tray.innerHTML += `
+                        <div class="squad-member-node" onclick="window.location.href='community.html'">
+                            <div class="node-avatar-wrapper ${borderStatus}">
+                                <i class="fas ${avatar}"></i>
+                                <div class="node-indicator ${nodeDotStatus}"></div>
+                            </div>
+                            <span>${friendData.username || "Ally"}</span>
+                        </div>
+                    `;
+                    integratedNodeCount++;
+                }
+            });
+
+            if(integratedNodeCount === 0) {
+                tray.innerHTML = `<span style=\"color:#8c91a2; font-size:12px; font-family:'Roboto'\"><i class=\"fas fa-user-slash\"></i> No squad members online. Invite allies in Lounge!</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booyah HUB - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .btn-google {
+            background: #ffffff; color: #000000; border: none; padding: 12px;
+            font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 15px;
+            border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s;
+        }
+        .btn-google i { color: #ea4335; font-size: 18px; }
+        .btn-google:hover { background: #eeeeee; }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="login-wrapper">
+        <div class="auth-logo" style="text-align: center; margin-bottom: 20px;">BOOYAH<span>HUB</span></div>
+        <h2 style="text-align: center; font-family: 'Rajdhani'; margin-bottom: 20px; color: #8c91a2;">LOG IN TO ARENA</h2>
+        
+        <label id="error-label" style="display: none; color: #ff3333; font-size: 13px; text-align: center; margin-bottom: 15px; font-family: 'Roboto';"></label>
+        
+        <button id="google-login-btn" class="btn-google">
+            <i class="fab fa-google"></i> Continue with Google
+        </button>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 14px; color: #8c91a2;">
+            New Warrior? <a href="signup.html" style="color: #00ffcc; text-decoration: none; font-weight: bold;">Create Account</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db, googleProvider } from './firebase-config.js';
+        import { signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        const googleBtn = document.getElementById('google-login-btn');
+        const errLabel = document.getElementById('error-label');
+
+        googleBtn.addEventListener('click', () => {
+            errLabel.style.display = "none";
+
+            signInWithPopup(auth, googleProvider)
+                .then(async (result) => {
+                    const user = result.user;
+                    const userDocRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(userDocRef);
+
+                    if (!docSnap.exists()) {
+                        await setDoc(userDocRef, {
+                            username: user.displayName || "Gamer Pro",
+                            email: user.email,
+                            bio: "Tactical Gamer Zone.",
+                            discord: "",
+                            avatar: "fa-user-secret",
+                            isOnline: true
+                        });
+                        // Wallet initialization inside 'wallets' collection
+                        await setDoc(doc(db, "wallets", user.uid), {
+                            diamonds: 0
+                        });
+                    } else {
+                        await setDoc(userDocRef, { isOnline: true }, { merge: true });
+                    }
+
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    errLabel.style.display = "block";
+                    errLabel.innerText = "Google Authentication Failed! Try Again.";
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
